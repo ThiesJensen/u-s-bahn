@@ -9,7 +9,8 @@ const API = 'https://v6.bvg.transport.rest'
 const MODES = 'subway=true&suburban=true&tram=false&bus=false&ferry=false&express=false&regional=false&language=de'
 const FALLBACK = { suburban: ['#008D4F', '#FFFFFF'], subway: ['#1B62A8', '#FFFFFF'] }
 const AREA = [12.95, 52.2, 14.05, 52.85]
-const MOBILE = matchMedia('(max-width: 699px)')
+const MOBILE = matchMedia('(max-width: 699px) and (orientation: portrait)')
+const COMPACT = matchMedia('(max-width: 1099px), (max-height: 500px)')
 const TOUCH = matchMedia('(pointer: coarse)').matches
 const DARK = matchMedia('(prefers-color-scheme: dark)')
 const PITCH = MOBILE.matches ? 48 : 56
@@ -82,7 +83,7 @@ const state = {
 }
 document.documentElement.dataset.theme = state.theme
 document.querySelector('meta[name="theme-color"]').content = state.theme === 'dark' ? '#0a0d13' : '#f2f1ec'
-if (MOBILE.matches) search.placeholder = 'Bahnhof oder Linie'
+if (MOBILE.matches) search.placeholder = innerWidth < 390 ? 'Suchen' : 'Bahnhof oder Linie'
 
 const map = new MapLibre({
   container: 'map',
@@ -311,7 +312,7 @@ const failure = text => h('div', { class: 'state' }, h('p', {}, text), h('button
 
 const pad = () => MOBILE.matches
   ? { top: 90, bottom: Math.round(innerHeight * 0.52) + 48, left: 40, right: 40 }
-  : { top: 100, bottom: 60, left: 450, right: legend.classList.contains('open') ? 380 : 150 }
+  : { top: 100, bottom: 60, left: panel.offsetWidth + 66, right: legend.classList.contains('open') ? 380 : 150 }
 
 const spread = () => state.mode === '3d' && !state.real ? sep : 0
 
@@ -416,7 +417,7 @@ const setView = next => {
   controller?.abort()
   clearTimeout(pollTimer)
   if (next) finishIntro()
-  if (next && MOBILE.matches) toggleLegend(false)
+  if (next && COMPACT.matches) toggleLegend(false)
   view = state.view = next
   state.route = null
   countdowns = []
@@ -425,7 +426,7 @@ const setView = next => {
   panel.classList.toggle('open', Boolean(next))
   panel.dataset.kind = next?.kind ?? ''
   strip([])
-  body.scrollTop = 0
+  body.scrollTop = panel.scrollTop = 0
   chips.replaceChildren()
   age.textContent = ''
   for (const button of legend.querySelectorAll('[data-line]')) button.setAttribute('aria-pressed', next?.kind === 'line' && next.id === button.dataset.line)
@@ -711,7 +712,7 @@ map.on('mouseout', () => {
 map.on('movestart', () => { tip.hidden = true })
 
 map.on('click', event => {
-  if (MOBILE.matches) toggleLegend(false)
+  if (COMPACT.matches) toggleLegend(false)
   const top = scene.pick(event.point)[0]
   if (!top) return
   tip.hidden = true
@@ -863,7 +864,7 @@ if (intro) {
   map.once('idle', () => setTimeout(camera.intro, 1200))
 }
 
-toggleLegend(!MOBILE.matches)
+toggleLegend(!COMPACT.matches)
 legendToggle.addEventListener('click', () => toggleLegend())
 
 const setTheme = next => {
@@ -964,7 +965,7 @@ addEventListener('keydown', event => {
     event.preventDefault()
     search.focus()
   } else if (event.key === 'Escape') {
-    if (MOBILE.matches && legend.classList.contains('open')) toggleLegend(false)
+    if (COMPACT.matches && legend.classList.contains('open')) toggleLegend(false)
     else if (view) go('')
   } else if ((event.key === '[' || event.key === ']') && spread()) {
     setSep(sep + (event.key === ']' ? 0.1 : -0.1))

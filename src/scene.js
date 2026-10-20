@@ -20,7 +20,7 @@ class Fog extends LayerExtension {
   }
 }
 
-const MOBILE = matchMedia('(max-width: 699px)').matches
+const MOBILE = matchMedia('(max-width: 699px) and (orientation: portrait)').matches
 const TOUCH = matchMedia('(pointer: coarse)').matches
 const FONT = 'IBM Plex Sans Variable'
 const WIDTHS = [[9, 1.3], [11, 2], [13, 3.2], [15, 5.4], [17, 8.5]]

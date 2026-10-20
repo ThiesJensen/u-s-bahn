@@ -15,7 +15,7 @@ Interaktive, dreidimensionale Karte des Berliner S- und U-Bahn-Netzes mit Live-A
 - Linienansicht mit allen Bahnhöfen und Umstiegen
 - Live-Züge auf der Karte, flüssig animiert, mit einer kleinen weißen Spitze in Fahrtrichtung; Züge, die gerade halten, als Ring in Linienfarbe um den Bahnhof
 - Suche nach Bahnhöfen und Linien, Deep Links wie `#s=900100003` oder `#l=U8`
-- Helles und dunkles Design, optimiert für Desktop und Smartphone
+- Helles und dunkles Design, optimiert für Desktop, Tablet und Smartphone im Hoch- und Querformat
 
 ## Bedienung
 

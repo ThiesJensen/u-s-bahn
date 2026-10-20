@@ -2,7 +2,11 @@
   --font: 'IBM Plex Sans Variable', 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --gap: 16px;
   --bar: 48px;
-  --panel-w: 384px;
+  --panel-w: min(384px, 50vw);
+  --top: max(var(--gap), env(safe-area-inset-top));
+  --left: max(var(--gap), env(safe-area-inset-left));
+  --right: max(var(--gap), env(safe-area-inset-right));
+  --bottom: max(var(--gap), env(safe-area-inset-bottom));
   --radius: 14px;
   --control: 8px;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -134,9 +138,9 @@ input {
 .topbar {
   position: fixed;
   z-index: 5;
-  top: var(--gap);
-  left: var(--gap);
-  right: var(--gap);
+  top: var(--top);
+  left: var(--left);
+  right: var(--right);
   display: flex;
   gap: 8px;
   pointer-events: none;
@@ -170,7 +174,7 @@ input {
   outline: 0;
   background: none;
   color: var(--text);
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .search input::placeholder {
@@ -391,12 +395,12 @@ input {
 .legend {
   position: fixed;
   z-index: 4;
-  top: calc(var(--gap) + var(--bar) + 8px);
-  right: var(--gap);
+  top: calc(var(--top) + var(--bar) + 8px);
+  right: var(--right);
   display: grid;
   gap: 8px;
   width: 340px;
-  max-height: calc(100dvh - var(--bar) - 4 * var(--gap) - 64px);
+  max-height: calc(100dvh - var(--bar) - 4 * var(--gap) - 112px);
   padding: 16px 16px 0;
   overflow-y: auto;
   border-radius: var(--radius);
@@ -415,7 +419,7 @@ input {
 }
 
 body:has(.hint:not([hidden])) .legend {
-  max-height: calc(100dvh - var(--bar) - 4 * var(--gap) - 128px);
+  max-height: calc(100dvh - var(--bar) - 4 * var(--gap) - 136px);
 }
 
 .legend:not(.open) {
@@ -896,12 +900,12 @@ body:has(.hint:not([hidden])) .legend {
   --strip: none;
   position: fixed;
   z-index: 3;
-  top: calc(var(--gap) + var(--bar) + 8px);
-  left: var(--gap);
+  top: calc(var(--top) + var(--bar) + 8px);
+  left: var(--left);
   display: flex;
   flex-direction: column;
   width: var(--panel-w);
-  max-height: calc(100dvh - var(--bar) - 3 * var(--gap) - 8px);
+  max-height: calc(100dvh - var(--top) - var(--bar) - 2 * var(--gap) - 8px);
   overflow: hidden;
   border-radius: var(--radius);
   transition: transform 0.35s var(--ease), opacity 0.25s, visibility 0.35s, height 0.3s var(--ease);
@@ -936,10 +940,14 @@ body:has(.hint:not([hidden])) .legend {
   transform: translateX(calc(-100% - 2 * var(--gap)));
 }
 
-@media (min-width: 700px) {
+@media (min-width: 700px), (orientation: landscape) {
   body:has(.results:not([hidden])) .panel {
     visibility: hidden;
     opacity: 0;
+  }
+
+  body:has(.panel.open) .camera {
+    max-width: calc(100vw - var(--left) - var(--panel-w) - var(--gap) - var(--right));
   }
 }
 
@@ -1556,8 +1564,8 @@ button.notice {
 }
 
 .maplibregl-ctrl-bottom-right {
-  right: calc(var(--gap) - 10px);
-  bottom: calc(var(--gap) - 10px);
+  right: calc(var(--right) - 10px);
+  bottom: calc(var(--bottom) - 10px);
 }
 
 .maplibregl-ctrl-group {
@@ -1582,8 +1590,11 @@ button.notice {
 .camera {
   position: relative;
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   align-items: flex-end;
   gap: 8px;
+  max-width: calc(100vw - var(--left) - var(--right));
 }
 
 .views,
@@ -1741,6 +1752,47 @@ button.notice {
   .hint .coarse {
     display: inline;
   }
+
+  .eye,
+  .switch {
+    min-height: 44px;
+  }
+
+  .lines {
+    gap: 6px;
+  }
+
+  .lines .badge {
+    min-width: 40px;
+    height: 30px;
+    font-size: 13.5px;
+  }
+
+  .segmented button {
+    height: 36px;
+  }
+
+  .slider input {
+    height: 36px;
+  }
+
+  .chip {
+    height: 36px;
+  }
+
+  .back {
+    min-height: 36px;
+  }
+
+  #refresh,
+  .close {
+    width: 40px;
+    height: 40px;
+  }
+
+  .results li {
+    min-height: 48px;
+  }
 }
 
 @keyframes rise {
@@ -1776,7 +1828,7 @@ button.notice {
   color: var(--text);
 }
 
-@media (max-width: 699px) {
+@media (max-width: 699px) and (orientation: portrait) {
   :root {
     --gap: 10px;
     --bar: 46px;
@@ -1807,12 +1859,12 @@ button.notice {
   }
 
   .views button {
-    padding: 0 9px;
-    font-size: 12.5px;
+    padding: 0 6px;
+    font-size: 12px;
   }
 
   .legend {
-    left: var(--gap);
+    left: var(--left);
     width: auto;
     max-height: calc(100dvh - var(--bar) - 3 * var(--gap));
     padding: 14px 14px 0;
@@ -1887,6 +1939,45 @@ button.notice {
 
   .tip {
     display: none;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  :root {
+    --gap: 10px;
+    --bar: 46px;
+  }
+
+  #tilt,
+  .dock [data-zoom] {
+    display: none;
+  }
+
+  .legend {
+    max-height: calc(100dvh - var(--top) - var(--bar) - 2 * var(--gap) - 8px);
+  }
+
+  body:has(.legend.open) .camera {
+    visibility: hidden;
+  }
+
+  .panel {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  .panel-body {
+    flex: none;
+    overflow: visible;
+  }
+
+  .panel-head {
+    padding-top: 16px;
+  }
+
+  .title {
+    font-size: 24px;
   }
 }
 
