@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="Live-Abfahrten der Berliner S- und U-Bahn auf einer dreidimensionalen Netzkarte mit eigenen Ebenen." />
+    <meta name="theme-color" content="#0a0d13" />
+    <title>Takt – S- und U-Bahn Berlin live</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a0d13'/%3E%3Cpath d='M6 21l10 5 10-5' fill='none' stroke='%234c9bff' stroke-width='2.4' stroke-linejoin='round'/%3E%3Cpath d='M6 11l10-5 10 5-10 5z' fill='none' stroke='%233dd68c' stroke-width='2.4' stroke-linejoin='round'/%3E%3Cpath d='M16 16v10' stroke='%23ffd23f' stroke-width='2.4'/%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <div id="map" role="region" aria-label="Dreidimensionale Karte des Berliner S- und U-Bahn-Netzes"></div>
+
+    <header class="topbar">
+      <div class="search glass" role="search">
+        <span class="brand" aria-hidden="true"><i class="sign s">S</i><i class="sign u">U</i></span>
+        <input
+          id="search"
+          type="text"
+          placeholder="Bahnhof oder Linie suchen"
+          autocomplete="off"
+          spellcheck="false"
+          enterkeyhint="go"
+          role="combobox"
+          aria-label="Bahnhof oder Linie suchen"
+          aria-autocomplete="list"
+          aria-controls="results"
+          aria-expanded="false"
+        />
+        <kbd aria-hidden="true">/</kbd>
+        <ul id="results" class="results glass" role="listbox" aria-label="Suchergebnisse" hidden></ul>
+      </div>
+      <div id="mode" class="mode glass" role="group" aria-label="Ansicht">
+        <button type="button" data-mode="2d" aria-pressed="false" title="Flache Karte">2D</button>
+        <button type="button" data-mode="3d" aria-pressed="true" title="Räumliche Karte mit Ebenen">3D</button>
+      </div>
+      <button id="theme" class="icon glass" type="button" aria-label="Hell oder dunkel" title="Hell oder dunkel">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.8" /><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" /></svg>
+      </button>
+      <button id="legend-toggle" class="icon glass" type="button" aria-label="Ebenen" title="Ebenen" aria-controls="legend" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3.5 3.5 8 12 12.5 20.5 8z" /><path d="m3.5 12 8.5 4.5 8.5-4.5" /><path d="m3.5 16 8.5 4.5 8.5-4.5" /></svg>
+      </button>
+    </header>
+
+    <section id="legend" class="legend glass" aria-label="Ebenen">
+      <p class="eyebrow">Ebenen</p>
+      <div class="levels">
+        <div class="model" aria-hidden="true">
+          <div class="plate city" data-level="city" style="--i: 0"></div>
+          <div class="plate u" data-level="subway" style="--i: 1"></div>
+          <div class="plate s" data-level="suburban" style="--i: 2"></div>
+        </div>
+        <div class="rows">
+          <div class="group" data-product="suburban">
+            <button class="eye" type="button" role="switch" aria-checked="true" data-show="suburban"><i class="sign s">S</i><span>S-Bahn<small class="schema-only">Ebene 2</small><small class="real-only">Meist oben</small></span></button>
+            <div class="lines"></div>
+          </div>
+          <div class="group" data-product="subway">
+            <button class="eye" type="button" role="switch" aria-checked="true" data-show="subway"><i class="sign u">U</i><span>U-Bahn<small class="schema-only">Ebene 1</small><small class="real-only">Meist im Tunnel</small></span></button>
+            <div class="lines"></div>
+          </div>
+          <div class="group">
+            <button class="eye" type="button" role="switch" aria-checked="true" data-show="city"><i class="sign city"></i><span>Stadt<small class="schema-only">Ebene 0</small><small class="real-only">Echte Höhen</small></span></button>
+          </div>
+        </div>
+      </div>
+      <div class="overlays">
+        <div class="group live">
+          <button class="switch" type="button" role="switch" aria-checked="true" data-show="trains"><i class="pulse"></i>Live-Züge</button>
+          <p id="train-note" class="note" aria-live="polite"></p>
+        </div>
+        <div class="group">
+          <button class="switch" type="button" role="switch" aria-checked="true" data-show="borders"><i class="glyph border" aria-hidden="true"></i><span>Grenzen<small>Berlin und Brandenburg</small></span></button>
+        </div>
+        <div class="group off">
+          <button class="switch" type="button" role="switch" aria-checked="false" data-show="zones" aria-controls="fares"><i class="glyph abc" aria-hidden="true"></i><span>Tarifzonen<small>VBB Berlin ABC</small></span></button>
+          <ul id="fares" class="fares">
+            <li title="Innerhalb des S-Bahn-Rings"><i class="zone za">A</i>Ring</li>
+            <li title="Vom S-Bahn-Ring bis zur Stadtgrenze"><i class="zone zb">B</i>Stadt</li>
+            <li title="Umland mit Potsdam und BER"><i class="zone zc">C</i>Umland</li>
+          </ul>
+        </div>
+      </div>
+      <div class="depth">
+        <span class="eyebrow">3D</span>
+        <div id="depth" class="segmented" role="group" aria-label="3D-Darstellung">
+          <button type="button" data-depth="real" aria-pressed="true" title="Echte Höhen: U-Bahn im Tunnel, S-Bahn auf Damm und Viadukt">Real</button>
+          <button type="button" data-depth="schema" aria-pressed="false" title="Explodierte Ebenen übereinander">Schema</button>
+        </div>
+      </div>
+      <div class="slider real-only">
+        <span class="eyebrow">Durchsicht</span>
+        <input id="xray" type="range" min="0" max="1" step="0.01" aria-label="Durchsicht durch Boden und Gebäude" />
+        <span class="ends" aria-hidden="true"><span>Boden</span><span>Röntgen</span></span>
+      </div>
+      <div class="slider real-only">
+        <span class="eyebrow">Höhen</span>
+        <input id="exag" type="range" min="1" max="3" step="0.25" aria-label="Überhöhung von Gebäuden und Gleisen" />
+        <span class="ends" aria-hidden="true"><span>maßstäblich</span><output id="exag-value">1×</output></span>
+      </div>
+      <div class="slider schema-only">
+        <span class="eyebrow">Abstand</span>
+        <input id="sep" type="range" min="0" max="1" step="0.01" aria-label="Ebenenabstand" />
+        <span class="ends" aria-hidden="true"><span>flach</span><span>explodiert</span></span>
+      </div>
+    </section>
+
+    <aside id="panel" class="panel glass" aria-label="Details">
+      <button class="grip" type="button" aria-label="Bereich vergrößern oder verkleinern"><span></span></button>
+      <button id="close" class="icon close" type="button" aria-label="Schließen" title="Schließen (Esc)">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+      <header id="panel-head" class="panel-head"></header>
+      <div class="panel-bar">
+        <div id="chips" class="chips" role="group" aria-label="Nach Linie filtern"></div>
+        <div class="status">
+          <i class="live-dot"></i>
+          <span id="age" aria-live="off"></span>
+          <button id="refresh" class="icon" type="button" aria-label="Jetzt aktualisieren" title="Jetzt aktualisieren">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3" /><path d="M19.5 4.5v4h-4" /></svg>
+          </button>
+        </div>
+      </div>
+      <div id="panel-body" class="panel-body"></div>
+    </aside>
+
+    <div id="camera" class="maplibregl-ctrl camera">
+      <div id="gestures" class="gestures glass" role="dialog" aria-label="Steuerung" hidden>
+        <p class="eyebrow">Steuerung</p>
+        <dl>
+          <dt>Maus</dt>
+          <dd>Ziehen verschiebt, Rad zoomt. Mit rechter Maustaste oder Strg ziehen: drehen und neigen.</dd>
+          <dt>Trackpad</dt>
+          <dd>Zwei Finger verschieben, Aufziehen zoomt. Shift und zwei Finger: drehen und neigen. Safari dreht auch mit der Drehgeste.</dd>
+          <dt>Touch</dt>
+          <dd>Zwei Finger zoomen und drehen. Beide Finger hoch oder runter ziehen neigt.</dd>
+          <dt>Tastatur</dt>
+          <dd>Pfeiltasten verschieben, Shift und Pfeiltasten drehen und neigen, Plus und Minus zoomen.</dd>
+          <dt>Untergrund</dt>
+          <dd>Die Neigung hält am Horizont an. Ein Stück weiter neigen führt unter den Boden, ebenso der Blick „Untergrund“.</dd>
+        </dl>
+      </div>
+      <p id="hint" class="hint glass" hidden>
+        <span class="fine">Rechte Maustaste ziehen dreht und neigt, am Trackpad Shift und zwei Finger.</span>
+        <span class="coarse">Zwei Finger drehen und zoomen, gemeinsam hoch oder runter ziehen neigt.</span>
+      </p>
+      <div class="views glass three" role="group" aria-label="Blickwinkel">
+        <button type="button" data-view="top" title="Senkrecht von oben">Von oben</button>
+        <button type="button" data-view="tilt" title="Schräg von der Seite">Schräg</button>
+        <button type="button" data-view="under" title="Von unten auf Tunnel und Bahnhöfe">Untergrund</button>
+      </div>
+      <div class="dock glass" role="group" aria-label="Kamera">
+        <input id="tilt" class="three" type="range" min="0" max="150" step="1" aria-label="Neigung" title="Neigung" />
+        <button id="compass" class="three" type="button" aria-label="Nach Norden ausrichten" title="Klicken: nach Norden, ziehen: drehen und neigen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.45" /><path d="M12 4 15.2 12H8.8z" fill="#ff5a4f" /><path d="M12 20 8.8 12h6.4z" fill="currentColor" opacity="0.6" /></svg>
+        </button>
+        <button type="button" data-zoom="-1" aria-label="Verkleinern" title="Verkleinern"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg></button>
+        <button type="button" data-zoom="1" aria-label="Vergrößern" title="Vergrößern"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12h12M12 6v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg></button>
+        <button type="button" data-view="home" aria-label="Ansicht zurücksetzen" title="Ansicht zurücksetzen"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3" /><path d="M4.5 4.5v4h4" /></svg></button>
+        <button id="help" type="button" aria-label="Steuerung" title="Steuerung" aria-expanded="false" aria-controls="gestures"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M9.5 9.2a2.6 2.6 0 1 1 3.6 2.4c-.7.3-1.1.9-1.1 1.6v.6" /><circle cx="12" cy="17" r="0.4" fill="currentColor" /></svg></button>
+      </div>
+    </div>
+
+    <div id="tip" class="tip glass" hidden></div>
+    <div id="toast" class="toast glass" role="alert" hidden></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
